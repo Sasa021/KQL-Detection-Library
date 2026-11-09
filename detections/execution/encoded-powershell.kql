@@ -1,0 +1,28 @@
+// name: Encoded PowerShell command
+// attack_technique: T1059.001
+// data_source: DeviceProcessEvents
+// description: Finds powershell.exe or pwsh.exe launched with an encoded command switch. It matches -EncodedCommand, -Enc, -Ec, and a lone -E or /E only when a long encoded blob follows. A normal -Encoding argument does not match.
+// false_positives: Installers and management tools sometimes start encoded PowerShell. Decode the blob in the lab and record the parent process before you call it hostile.
+// tuning_notes: PLACEHOLDER. After you run this query in the lab, write the threshold you kept, any accounts or hosts you excluded, and why.
+// atomic_test: T1059.001-15
+// status: untested
+
+// Run in Defender XDR advanced hunting. Prefer that portal over streaming raw events into Sentinel for this lab.
+DeviceProcessEvents
+| where Timestamp > ago(1d)
+| where FileName in~ ("powershell.exe", "pwsh.exe")
+| where ProcessCommandLine matches regex @"[-/][Ee][Nn][Cc][Oo][Dd][Ee][Dd][Cc][Oo][Mm][Mm][Aa][Nn][Dd](\s|:)"
+    or ProcessCommandLine matches regex @"[-/][Ee][Nn][Cc][\s:]+[A-Za-z0-9+/=]{8,}"
+    or ProcessCommandLine matches regex @"[-/][Ee][Cc][\s:]+[A-Za-z0-9+/=]{8,}"
+    or ProcessCommandLine matches regex @"[-/][Ee][\s:]+[A-Za-z0-9+/=]{40,}"
+| project
+    Timestamp,
+    DeviceName,
+    AccountName,
+    FileName,
+    ProcessCommandLine,
+    InitiatingProcessFileName,
+    InitiatingProcessCommandLine,
+    InitiatingProcessAccountName,
+    SHA256
+| order by Timestamp desc

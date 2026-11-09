@@ -1,0 +1,27 @@
+// name: SAM hive save
+// attack_technique: T1003.002
+// data_source: DeviceProcessEvents
+// description: Finds reg.exe saving the SAM, SYSTEM, or SECURITY registry hive. The hive name must end at a space so a normal path under HKLM\SYSTEM\CurrentControlSet does not match.
+// false_positives: A backup or support script that exports those hives on purpose. Confirm the account and the output path.
+// tuning_notes: PLACEHOLDER. After you run this query in the lab, write the threshold you kept, any accounts or hosts you excluded, and why.
+// atomic_test: T1003.002-1
+// status: untested
+
+// Run in Defender XDR advanced hunting. Prefer that portal over streaming raw events into Sentinel for this lab.
+DeviceProcessEvents
+| where Timestamp > ago(1d)
+| where FileName =~ "reg.exe"
+| where ProcessCommandLine contains " save "
+| where ProcessCommandLine contains @"HKLM\sam "
+    or ProcessCommandLine contains @"HKLM\system "
+    or ProcessCommandLine contains @"HKLM\security "
+| project
+    Timestamp,
+    DeviceName,
+    AccountName,
+    FileName,
+    ProcessCommandLine,
+    InitiatingProcessFileName,
+    InitiatingProcessAccountName,
+    SHA256
+| order by Timestamp desc

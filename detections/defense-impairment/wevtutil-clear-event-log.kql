@@ -1,0 +1,25 @@
+// name: wevtutil clear event log
+// attack_technique: T1685.005
+// data_source: DeviceProcessEvents
+// description: Finds wevtutil.exe clearing a log (the cl command) and PowerShell Clear-EventLog or Remove-EventLog. ATT&CK v19 moved this behavior from T1070.001 to T1685.005. Clearing a log deletes local evidence and cannot be undone.
+// false_positives: An administrator clearing a noisy Application log during lab maintenance. The Security log should not be cleared on a system you still need to investigate.
+// tuning_notes: PLACEHOLDER. After you run this query in the lab, write the threshold you kept, any accounts or hosts you excluded, and why.
+// atomic_test: T1685.005-1
+// status: untested
+
+// Run in Defender XDR advanced hunting. Prefer that portal over streaming raw events into Sentinel for this lab.
+DeviceProcessEvents
+| where Timestamp > ago(7d)
+| where (FileName =~ "wevtutil.exe" and ProcessCommandLine has "cl")
+    or ProcessCommandLine contains "Clear-EventLog"
+    or ProcessCommandLine contains "Remove-EventLog"
+| project
+    Timestamp,
+    DeviceName,
+    AccountName,
+    FileName,
+    ProcessCommandLine,
+    InitiatingProcessFileName,
+    InitiatingProcessAccountName,
+    SHA256
+| order by Timestamp desc

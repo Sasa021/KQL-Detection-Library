@@ -1,0 +1,30 @@
+// name: RDP logon
+// attack_technique: T1021.001
+// data_source: SecurityEvent
+// description: Returns successful and failed Remote Desktop logons. Logon type 10 is RemoteInteractive. Event ID 4624 is a success and Event ID 4625 is a failure. Your own admin sessions will appear until you tune them out.
+// false_positives: The lab administrator connecting with RDP, and a jump box that is supposed to use RDP. Exclude those source addresses only after you have recorded them.
+// tuning_notes: PLACEHOLDER. After you run this query in the lab, write the threshold you kept, any accounts or hosts you excluded, and why.
+// atomic_test: T1021.001-1
+// status: untested
+
+// Run in Microsoft Sentinel Logs, in the workspace from Sentinel-Home-SOC-Lab.
+// Needs the SecurityEvent table and Logon auditing for success and failure.
+// The stock atomic test attempts mstsc. A failed attempt shows as 4625. A successful 4624 needs a valid lab account and Remote Desktop enabled.
+SecurityEvent
+| where TimeGenerated > ago(1d)
+| where EventID in (4624, 4625)
+| where LogonType == 10
+| extend Outcome = iff(EventID == 4624, "success", "failure")
+| project
+    TimeGenerated,
+    Outcome,
+    EventID,
+    Computer,
+    TargetUserName,
+    IpAddress,
+    WorkstationName,
+    LogonProcessName,
+    AuthenticationPackageName,
+    FailureReason,
+    Activity
+| order by TimeGenerated desc

@@ -1,0 +1,25 @@
+// name: Defender real-time protection disabled
+// attack_technique: T1685
+// data_source: DeviceProcessEvents
+// description: Finds a command line that turns off Microsoft Defender real-time protection with Set-MpPreference. ATT&CK v19 moved Disable or Modify Tools from T1562.001 to T1685. Tamper Protection may block the change. A blocked command can still be logged.
+// false_positives: A lab script or an administrator changing Defender settings. Confirm the account and turn protection back on.
+// tuning_notes: PLACEHOLDER. After you run this query in the lab, write the threshold you kept, any accounts or hosts you excluded, and why.
+// atomic_test: T1685-19
+// status: untested
+
+// Run in Defender XDR advanced hunting. Prefer that portal over streaming raw events into Sentinel for this lab.
+// Run the atomic cleanup as soon as you have the query result. Do not leave real-time protection off.
+DeviceProcessEvents
+| where Timestamp > ago(7d)
+| where ProcessCommandLine contains "DisableRealtimeMonitoring"
+    or (ProcessCommandLine contains "Set-MpPreference" and ProcessCommandLine contains "-drtm")
+| project
+    Timestamp,
+    DeviceName,
+    AccountName,
+    FileName,
+    ProcessCommandLine,
+    InitiatingProcessFileName,
+    InitiatingProcessAccountName,
+    SHA256
+| order by Timestamp desc

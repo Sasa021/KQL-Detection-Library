@@ -1,0 +1,23 @@
+// name: Network connection discovery
+// attack_technique: T1049
+// data_source: DeviceProcessEvents
+// description: Finds netstat.exe and PowerShell Get-NetTCPConnection. Both are common on a lab VM. This is a hunt, not a finished alert.
+// false_positives: Troubleshooting, inventory scripts, and security tools that list open sockets.
+// tuning_notes: PLACEHOLDER. After you run this query in the lab, write the threshold you kept, any accounts or hosts you excluded, and why.
+// atomic_test: T1049-1
+// status: untested
+
+// Run in Defender XDR advanced hunting. Prefer that portal over streaming raw events into Sentinel for this lab.
+DeviceProcessEvents
+| where Timestamp > ago(1d)
+| where FileName =~ "netstat.exe"
+    or ProcessCommandLine contains "Get-NetTCPConnection"
+| project
+    Timestamp,
+    DeviceName,
+    AccountName,
+    FileName,
+    ProcessCommandLine,
+    InitiatingProcessFileName,
+    InitiatingProcessAccountName
+| order by Timestamp desc

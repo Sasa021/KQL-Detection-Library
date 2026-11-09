@@ -1,0 +1,24 @@
+// name: New local user account
+// attack_technique: T1136.001
+// data_source: SecurityEvent
+// description: Returns Event ID 4720, which Windows writes when a local user account is created. It lists who created the account and the new account name.
+// false_positives: IT creating a lab user, and Windows features that add a service account. Confirm the subject account and the new name.
+// tuning_notes: PLACEHOLDER. After you run this query in the lab, write the threshold you kept, any accounts or hosts you excluded, and why.
+// atomic_test: T1136.001-4
+// status: untested
+
+// Run in Microsoft Sentinel Logs, in the workspace from Sentinel-Home-SOC-Lab.
+// Needs the SecurityEvent table and User Account Management auditing set to success.
+SecurityEvent
+| where TimeGenerated > ago(1d)
+| where EventID == 4720
+| project
+    TimeGenerated,
+    Computer,
+    SubjectUserName,
+    SubjectDomainName,
+    TargetUserName,
+    TargetDomainName,
+    TargetSid,
+    Activity
+| order by TimeGenerated desc

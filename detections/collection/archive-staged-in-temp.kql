@@ -1,0 +1,26 @@
+// name: Archive staged in Temp
+// attack_technique: T1074.001
+// data_source: DeviceFileEvents
+// description: Finds a zip, 7z, or rar file created under a Temp folder. Atomic test T1074.001-3 writes Folder_to_zip.zip into the user temp directory with Compress-Archive. Browsers and mail clients also unpack archives. Read the initiating process before you treat a row as staging.
+// false_positives: Installers, browser downloads that unpack into Temp, and Outlook or Teams. A file under Temp is not enough on its own.
+// tuning_notes: PLACEHOLDER. After you run this query in the lab, write the threshold you kept, any accounts or hosts you excluded, and why.
+// atomic_test: T1074.001-3
+// status: untested
+
+// Run in Defender XDR advanced hunting. Prefer that portal over streaming raw events into Sentinel for this lab.
+// If ActionType values in your tenant differ, run a summarize by ActionType and record the name you had to use. Do not invent a row.
+DeviceFileEvents
+| where Timestamp > ago(1d)
+| where ActionType == "FileCreated"
+| where FileName endswith ".zip" or FileName endswith ".7z" or FileName endswith ".rar"
+| where FolderPath contains @"\Temp\"
+| project
+    Timestamp,
+    DeviceName,
+    FileName,
+    FolderPath,
+    InitiatingProcessFileName,
+    InitiatingProcessCommandLine,
+    InitiatingProcessAccountName,
+    SHA256
+| order by Timestamp desc

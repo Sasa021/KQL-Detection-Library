@@ -1,0 +1,23 @@
+// name: Process discovery
+// attack_technique: T1057
+// data_source: DeviceProcessEvents
+// description: Finds tasklist.exe and PowerShell Get-Process. Listing processes is normal on an admin workstation. Use this hunt together with a suspicious parent process, not on its own.
+// false_positives: Administrators, monitoring agents, and scripts that check whether a program is running.
+// tuning_notes: PLACEHOLDER. After you run this query in the lab, write the threshold you kept, any accounts or hosts you excluded, and why.
+// atomic_test: T1057-2
+// status: untested
+
+// Run in Defender XDR advanced hunting. Prefer that portal over streaming raw events into Sentinel for this lab.
+DeviceProcessEvents
+| where Timestamp > ago(1d)
+| where FileName =~ "tasklist.exe"
+    or ProcessCommandLine contains "Get-Process"
+| project
+    Timestamp,
+    DeviceName,
+    AccountName,
+    FileName,
+    ProcessCommandLine,
+    InitiatingProcessFileName,
+    InitiatingProcessAccountName
+| order by Timestamp desc
