@@ -1,0 +1,22 @@
+// name: System information discovery
+// attack_technique: T1082
+// data_source: DeviceProcessEvents
+// description: Lists systeminfo.exe and hostname.exe process starts. These commands are common. Treat this as a hunt you pivot from, not as a finished alert.
+// false_positives: Inventory tools, login scripts, and anyone opening a command prompt to check the host name. systeminfo.exe is less common than hostname.exe.
+// tuning_notes: PLACEHOLDER. After you run this query in the lab, write the threshold you kept, any accounts or hosts you excluded, and why.
+// atomic_test: T1082-1
+// status: untested
+
+// Run in Defender XDR advanced hunting. Prefer that portal over streaming raw events into Sentinel for this lab.
+DeviceProcessEvents
+| where Timestamp > ago(1d)
+| where FileName in~ ("systeminfo.exe", "hostname.exe")
+| project
+    Timestamp,
+    DeviceName,
+    AccountName,
+    FileName,
+    ProcessCommandLine,
+    InitiatingProcessFileName,
+    InitiatingProcessAccountName
+| order by Timestamp desc

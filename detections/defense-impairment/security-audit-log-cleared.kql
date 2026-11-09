@@ -1,0 +1,16 @@
+// name: Security audit log cleared
+// attack_technique: T1685.005
+// data_source: SecurityEvent
+// description: Returns Event ID 1102, the Windows record written when the Security audit log is cleared. ATT&CK v19 moved this behavior from T1070.001 to T1685.005. The atomic test clears the System log unless you pass log_name Security. Only a Security log clear produces 1102.
+// false_positives: Rare on a lab VM. An administrator who clears the Security log during a test will show up here. That is the point of the test, and it also destroys the local copy of the log.
+// tuning_notes: PLACEHOLDER. After you run this query in the lab, write the threshold you kept, any accounts or hosts you excluded, and why.
+// atomic_test: T1685.005-1
+// status: untested
+
+// Run in Microsoft Sentinel Logs, in the workspace from Sentinel-Home-SOC-Lab.
+// Forward events to Sentinel before you clear the Security log. The local log will not come back.
+SecurityEvent
+| where TimeGenerated > ago(7d)
+| where EventID == 1102
+| project TimeGenerated, Computer, Account, SubjectUserName, SubjectDomainName, Activity
+| order by TimeGenerated desc

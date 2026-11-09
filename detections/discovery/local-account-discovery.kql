@@ -1,0 +1,27 @@
+// name: Local account discovery
+// attack_technique: T1087.001
+// data_source: DeviceProcessEvents
+// description: Finds net.exe or net1.exe listing users or local groups, and PowerShell Get-LocalUser or Get-LocalGroup. Windows often starts net1.exe when someone runs net.exe. This is a noisy hunt, not a finished alert.
+// false_positives: Help desk commands, inventory scripts, and normal administration. Look for an unusual parent process before you escalate a row.
+// tuning_notes: PLACEHOLDER. After you run this query in the lab, write the threshold you kept, any accounts or hosts you excluded, and why.
+// atomic_test: T1087.001-8
+// status: untested
+
+// Run in Defender XDR advanced hunting. Prefer that portal over streaming raw events into Sentinel for this lab.
+DeviceProcessEvents
+| where Timestamp > ago(1d)
+| where (
+        FileName in~ ("net.exe", "net1.exe")
+        and (ProcessCommandLine contains " user" or ProcessCommandLine contains " localgroup")
+    )
+    or ProcessCommandLine contains "Get-LocalUser"
+    or ProcessCommandLine contains "Get-LocalGroup"
+| project
+    Timestamp,
+    DeviceName,
+    AccountName,
+    FileName,
+    ProcessCommandLine,
+    InitiatingProcessFileName,
+    InitiatingProcessAccountName
+| order by Timestamp desc

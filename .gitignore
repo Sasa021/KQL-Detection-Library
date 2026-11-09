@@ -1,0 +1,35 @@
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Secrets and local config
+.env
+.env.*
+*.pem
+*.key
+*.pfx
+*.p12
+secrets/
+
+# Defender onboarding packages contain an organisation id. Do not commit them.
+WindowsDefenderATPOnboardingPackage.zip
+*OnboardingPackage*
+*OnboardingScript*
+
+# Unredacted exports and credential material. Do not commit these.
+evidence/raw/
+evidence/unredacted/
+*.dmp
+*.evtx
+*.pcap
+*.etl
+passwords.txt
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/

@@ -1,0 +1,26 @@
+// name: Member added to local Administrators
+// attack_technique: T1098.007
+// data_source: SecurityEvent
+// description: Returns Event ID 4732 when the changed group is the local Administrators group (SID S-1-5-32-544). T1136.001 test 8 creates a user and adds that user to Administrators, so that test is the one that should produce this event. The same technique is also Privilege Escalation.
+// false_positives: An administrator adding a lab support account to Administrators. Record the subject account and the member name.
+// tuning_notes: PLACEHOLDER. After you run this query in the lab, write the threshold you kept, any accounts or hosts you excluded, and why.
+// atomic_test: T1136.001-8
+// status: untested
+
+// Run in Microsoft Sentinel Logs, in the workspace from Sentinel-Home-SOC-Lab.
+// Needs the SecurityEvent table and Security Group Management auditing set to success.
+SecurityEvent
+| where TimeGenerated > ago(1d)
+| where EventID == 4732
+| where TargetSid =~ "S-1-5-32-544" or TargetUserName =~ "Administrators"
+| project
+    TimeGenerated,
+    Computer,
+    SubjectUserName,
+    SubjectDomainName,
+    TargetUserName,
+    TargetSid,
+    MemberName,
+    MemberSid,
+    Activity
+| order by TimeGenerated desc

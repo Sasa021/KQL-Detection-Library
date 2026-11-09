@@ -1,0 +1,26 @@
+// name: Registry Run key persistence
+// attack_technique: T1547.001
+// data_source: DeviceProcessEvents
+// description: Finds a process adding a value under the Windows Run or RunOnce key. That key starts a program at logon. The same technique is also Privilege Escalation. DeviceRegistryEvents can show the registry write itself when Defender records that key.
+// false_positives: Installers for browsers, chat tools, and security agents often set a Run key. Read the value name and the command it stores.
+// tuning_notes: PLACEHOLDER. After you run this query in the lab, write the threshold you kept, any accounts or hosts you excluded, and why.
+// atomic_test: T1547.001-1
+// status: untested
+
+// Run in Defender XDR advanced hunting. Prefer that portal over streaming raw events into Sentinel for this lab.
+DeviceProcessEvents
+| where Timestamp > ago(7d)
+| where ProcessCommandLine contains @"\Microsoft\Windows\CurrentVersion\Run"
+| where ProcessCommandLine contains " add "
+    or ProcessCommandLine contains "Set-ItemProperty"
+    or ProcessCommandLine contains "New-ItemProperty"
+| project
+    Timestamp,
+    DeviceName,
+    AccountName,
+    FileName,
+    ProcessCommandLine,
+    InitiatingProcessFileName,
+    InitiatingProcessAccountName,
+    SHA256
+| order by Timestamp desc

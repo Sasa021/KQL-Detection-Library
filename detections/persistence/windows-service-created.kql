@@ -1,0 +1,24 @@
+// name: Windows service created
+// attack_technique: T1543.003
+// data_source: DeviceProcessEvents
+// description: Finds sc.exe creating a service, or PowerShell New-Service. A new service is also Privilege Escalation. Event ID 4697 in SecurityEvent is the matching Windows audit event when Security System Extension auditing is on.
+// false_positives: Software installation and Windows features adding a service. Read the service name and the binary path.
+// tuning_notes: PLACEHOLDER. After you run this query in the lab, write the threshold you kept, any accounts or hosts you excluded, and why.
+// atomic_test: T1543.003-2
+// status: untested
+
+// Run in Defender XDR advanced hunting. Prefer that portal over streaming raw events into Sentinel for this lab.
+DeviceProcessEvents
+| where Timestamp > ago(1d)
+| where (FileName =~ "sc.exe" and ProcessCommandLine contains " create ")
+    or (FileName in~ ("powershell.exe", "pwsh.exe") and ProcessCommandLine contains "New-Service")
+| project
+    Timestamp,
+    DeviceName,
+    AccountName,
+    FileName,
+    ProcessCommandLine,
+    InitiatingProcessFileName,
+    InitiatingProcessAccountName,
+    SHA256
+| order by Timestamp desc

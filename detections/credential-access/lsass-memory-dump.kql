@@ -1,0 +1,24 @@
+// name: LSASS memory dump
+// attack_technique: T1003.001
+// data_source: DeviceProcessEvents
+// description: Finds process starts that dump LSASS memory with comsvcs.dll MiniDump or with ProcDump. Read the command line before you treat a row as hostile.
+// false_positives: A support engineer dumping a process with ProcDump, and some security tools that open LSASS. A dump of a process other than LSASS should not match this query.
+// tuning_notes: PLACEHOLDER. After you run this query in the lab, write the threshold you kept, any accounts or hosts you excluded, and why.
+// atomic_test: T1003.001-2
+// status: untested
+
+// Run in Defender XDR advanced hunting. The same table can appear in Sentinel after the Defender XDR connector streams raw events. That stream can add ingestion cost. Prefer advanced hunting for this lab.
+DeviceProcessEvents
+| where Timestamp > ago(1d)
+| where (FileName =~ "rundll32.exe" and ProcessCommandLine contains "comsvcs" and ProcessCommandLine contains "MiniDump")
+    or (FileName in~ ("procdump.exe", "procdump64.exe") and ProcessCommandLine contains "lsass")
+| project
+    Timestamp,
+    DeviceName,
+    AccountName,
+    FileName,
+    ProcessCommandLine,
+    InitiatingProcessFileName,
+    InitiatingProcessAccountName,
+    SHA256
+| order by Timestamp desc

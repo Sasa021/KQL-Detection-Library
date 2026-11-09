@@ -1,0 +1,28 @@
+// name: PowerShell WebClient download
+// attack_technique: T1105
+// data_source: DeviceProcessEvents
+// description: Finds PowerShell command lines that download a file with WebClient, Invoke-WebRequest, or Start-BitsTransfer. This is a hunt for ingress tool transfer, not proof that the file was malicious.
+// false_positives: Administrators downloading a tool, software updates, and lab scripts. Read the URL and the destination path.
+// tuning_notes: PLACEHOLDER. After you run this query in the lab, write the threshold you kept, any accounts or hosts you excluded, and why.
+// atomic_test: T1105-10
+// status: untested
+
+// Run in Defender XDR advanced hunting. Prefer that portal over streaming raw events into Sentinel for this lab.
+// Invoke-AtomicTest often runs PowerShell inside the current session, so the command line may not show this text. docs/atomic-red-team-testing.md explains how to start a new powershell.exe so the command line is logged.
+DeviceProcessEvents
+| where Timestamp > ago(1d)
+| where FileName in~ ("powershell.exe", "pwsh.exe")
+| where ProcessCommandLine contains "DownloadFile"
+    or ProcessCommandLine contains "DownloadString"
+    or ProcessCommandLine contains "Invoke-WebRequest"
+    or ProcessCommandLine contains "Start-BitsTransfer"
+| project
+    Timestamp,
+    DeviceName,
+    AccountName,
+    FileName,
+    ProcessCommandLine,
+    InitiatingProcessFileName,
+    InitiatingProcessAccountName,
+    SHA256
+| order by Timestamp desc

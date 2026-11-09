@@ -1,0 +1,24 @@
+// name: Scheduled task created with schtasks
+// attack_technique: T1053.005
+// data_source: DeviceProcessEvents
+// description: Finds schtasks.exe creating a task. Scheduled tasks are also Execution and Privilege Escalation. Event ID 4698 in SecurityEvent is the Windows audit record for task creation if Other Object Access Events auditing is on. This query uses the process command line because that is what the atomic test runs.
+// false_positives: Software installers, Group Policy, and administrators creating a task. Read the task name and the program it starts.
+// tuning_notes: PLACEHOLDER. After you run this query in the lab, write the threshold you kept, any accounts or hosts you excluded, and why.
+// atomic_test: T1053.005-1
+// status: untested
+
+// Run in Defender XDR advanced hunting. Prefer that portal over streaming raw events into Sentinel for this lab.
+DeviceProcessEvents
+| where Timestamp > ago(1d)
+| where FileName =~ "schtasks.exe"
+| where ProcessCommandLine contains "/create"
+| project
+    Timestamp,
+    DeviceName,
+    AccountName,
+    FileName,
+    ProcessCommandLine,
+    InitiatingProcessFileName,
+    InitiatingProcessAccountName,
+    SHA256
+| order by Timestamp desc

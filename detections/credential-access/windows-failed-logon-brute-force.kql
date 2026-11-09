@@ -1,0 +1,27 @@
+// name: Windows failed logon brute force
+// attack_technique: T1110.001
+// data_source: SecurityEvent
+// description: Counts failed Windows logons (Event ID 4625) per account in a 10 minute window and returns accounts at or above the starter threshold. This is a lab hunt, not a tuned production alert.
+// false_positives: A mistyped password, an expired password, a service that still has an old password, and a scanner aimed at the lab VM.
+// tuning_notes: PLACEHOLDER. After you run this query in the lab, write the threshold you kept, any accounts or hosts you excluded, and why.
+// atomic_test: T1110.001-1
+// status: untested
+
+// Run in Microsoft Sentinel Logs, in the workspace from Sentinel-Home-SOC-Lab.
+// Needs the SecurityEvent table and the Logon audit subcategory (success and failure).
+let failure_threshold = 5;
+SecurityEvent
+| where TimeGenerated > ago(1h)
+| where EventID == 4625
+| where isnotempty(TargetUserName)
+| where TargetUserName !in~ ("-", "ANONYMOUS LOGON")
+| summarize
+    FailedLogons = count(),
+    FirstSeen = min(TimeGenerated),
+    LastSeen = max(TimeGenerated),
+    SourceIPs = make_set(IpAddress),
+    LogonTypes = make_set(LogonType),
+    Computers = make_set(Computer)
+    by TargetUserName, bin(TimeGenerated, 10m)
+| where FailedLogons >= failure_threshold
+| order by FailedLogons desc
